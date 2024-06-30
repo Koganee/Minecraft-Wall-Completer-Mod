@@ -1,0 +1,76 @@
+package net.oakamer.tutorialmod.item.custom;
+
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.WorldlyContainer;
+
+
+public class StonePainterItem extends Item{
+    public StonePainterItem(Properties pProperties)
+    {
+        super(pProperties);
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext pContext) {
+        if(!pContext.getLevel().isClientSide())
+        {
+            BlockPos positionClicked = pContext.getClickedPos();
+            BlockState paint = pContext.getLevel().getBlockState(positionClicked);
+            Player player = pContext.getPlayer();
+            boolean foundBlock = false;
+            Level level = pContext.getLevel();
+            Item leftHand = pContext.getItemInHand().getItem();
+            //BlockState left = Block.getId(pContext.getBlockState());
+            for(int i = 0; i <= positionClicked.getY() + 64; i++)
+            {
+                BlockState state = pContext.getLevel().getBlockState(positionClicked.below(i));
+                BlockState paintedBlock = paintBlock(positionClicked.below(i), player, state.getBlock(), level, paint);
+                if(paintedBlock == paint && i > 0)
+                {
+                    break;
+                }
+                /*if(isValuableBlock(state))
+                {
+                    paintBlock(positionClicked.below(i), player, state.getBlock(), level);
+                    //foundBlock = true;
+
+                    //break;
+                }*/
+            }
+
+        }
+
+        pContext.getItemInHand().hurtAndBreak(1, pContext.getPlayer(),
+                player -> player.broadcastBreakEvent(player.getUsedItemHand()));
+
+
+        return InteractionResult.SUCCESS;
+    }
+
+    private BlockState paintBlock(BlockPos blockPos, Player player, Block block, Level level, BlockState paint)
+    {
+        BlockState diamondBlock = Blocks.DIAMOND_BLOCK.getStateDefinition().any();
+        BlockState air = Blocks.AIR.getStateDefinition().any();
+
+        //if (level.getBlockState((new BlockPos(blockPos.getX(),blockPos.getY(), blockPos.getZ()))) != air) {
+        level.setBlock((new BlockPos(blockPos.getX(), blockPos.getY(), blockPos.getZ())), paint, 10);
+
+        //}
+        return level.getBlockState((new BlockPos(blockPos.getX(),blockPos.getY()-1, blockPos.getZ())));
+    }
+
+
+    private boolean isValuableBlock(BlockState state) {
+        return state.is(Blocks.STONE);
+    }
+}
